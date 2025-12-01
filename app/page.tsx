@@ -1,4 +1,6 @@
+import Link from "next/link";
 import { Github, Linkedin, Mail } from "lucide-react";
+import { projects } from "./projects/projectsData";
 
 const projects = [
   {
@@ -114,8 +116,9 @@ export default function Home() {
 
         <div className="grid gap-5 md:grid-cols-3">
           {projects.map((project) => (
-            <article
-              key={project.title}
+            <Link
+              key={project.slug}
+              href={`/projects/${project.slug}`}
               className="group rounded-2xl border border-slate-700 bg-slate-900/70 p-4 flex flex-col justify-between hover:border-cyan-400/70 hover:-translate-y-1 transition"
             >
               <header className="space-y-2">
@@ -123,15 +126,15 @@ export default function Home() {
                   {project.tag}
                 </p>
                 <h3 className="text-lg font-semibold">{project.title}</h3>
-                <p className="text-sm text-slate-300">{project.description}</p>
+                <p className="text-sm text-slate-300">{project.summary}</p>
               </header>
 
               <footer className="mt-4">
                 <span className="inline-flex items-center gap-2 text-xs text-cyan-300 group-hover:gap-3 transition">
-                  Case study coming soon
+                  View case study
                 </span>
               </footer>
-            </article>
+            </Link>
           ))}
         </div>
       </section>

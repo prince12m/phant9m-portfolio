@@ -1,7 +1,12 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getProject } from "../projectsData";
+import { getProject, projects } from "../projectsData";
+
+export function generateStaticParams() {
+  // Tell Next which slugs to pre-render for static export
+  return projects.map((project) => ({ slug: project.slug }));
+}
 
 export default function ProjectPage({ params }: { params: { slug: string } }) {
   const project = getProject(params.slug);

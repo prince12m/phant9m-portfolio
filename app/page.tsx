@@ -2,30 +2,6 @@ import Link from "next/link";
 import { Github, Linkedin, Mail } from "lucide-react";
 import { projects } from "./projects/projectsData";
 
-const projects = [
-  {
-    title: "Cardinal Prototype One",
-    tag: "Roblox | Combat & Character Creation",
-    description:
-      "Deepwoken-inspired prototype featuring custom movement, lock-on combat, and an advanced race & attribute-based character creator.",
-    link: "#",
-  },
-  {
-    title: "Project HSSSZ",
-    tag: "Unity | FMP | Cyborg Zombie Shooter",
-    description:
-      "Procedural maze shooter with a Nemesis-style AI system, dynamic cover placement, and sci-fi cyborg zombies.",
-    link: "#",
-  },
-  {
-    title: "Shadows / UE5 Movement System",
-    tag: "Unreal Engine 5 | C++",
-    description:
-      "Custom third-person character controller with sliding, wall-climbing and parkour-inspired movement.",
-    link: "#",
-  },
-];
-
 const skills = [
   "Game Dev: Unity, Unreal Engine 5, Roblox Studio",
   "Languages: C#, C++, TypeScript, Lua",
@@ -160,7 +136,8 @@ export default function Home() {
         <h2 className="text-xl md:text-2xl font-semibold">Contact</h2>
         <p className="text-slate-300 text-sm md:text-base">
           For collaborations, opportunities or questions about any of my
-          projects, you can reach me via email or LinkedIn.
+          projects, you can reach me via email or LinkedIn. A current CV is also
+          available.
         </p>
 
         <div className="flex flex-wrap gap-3">
@@ -181,13 +158,20 @@ export default function Home() {
             LinkedIn
           </a>
           <a
-            href="https://github.com"
+            href="https://github.com/prince12m"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 rounded-full border border-slate-700 px-4 py-2 text-sm hover:border-cyan-400 hover:text-cyan-300 transition"
           >
             <Github className="w-4 h-4" />
-            GitHub (add later)
+            GitHub
+          </a>
+          <a
+            href="/cv/prince-malonga-cv.pdf"
+            target="_blank"
+            className="inline-flex items-center gap-2 rounded-full border border-cyan-500 bg-cyan-500/10 px-4 py-2 text-sm text-cyan-200 hover:bg-cyan-500/20 transition"
+          >
+            Download CV (PDF)
           </a>
         </div>
       </section>

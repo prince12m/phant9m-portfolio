@@ -1,3 +1,31 @@
+# phant9m.dev – Portfolio
+
+Source code for my personal portfolio site **[phant9m.dev](https://phant9m.dev)**.
+
+Built to showcase my work as a **game programmer** and **creative technologist** across:
+
+- Roblox (Cardinal Prototype One)
+- Unity (Project HSSSZ – cyborg zombie shooter)
+- Unreal Engine 5 (advanced movement systems)
+- Future projects in **cybersecurity** and **AI**
+
+## Tech stack
+
+- [Next.js 16](https://nextjs.org/) – App Router
+- TypeScript
+- Tailwind CSS
+- Cloudflare Pages (hosting)
+- GitHub (version control)
+- Deployed as a static export (`next export` → `/out`)
+
+## Development
+
+````bash
+npm install
+npm run dev
+# open http://localhost:3000
+
+
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
@@ -12,7 +40,7 @@ yarn dev
 pnpm dev
 # or
 bun dev
-```
+````
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 

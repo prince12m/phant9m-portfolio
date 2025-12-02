@@ -4,7 +4,10 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Phant9m | Portfolio",
   description:
-    "Portfolio of Prince Malonga (Phant9m) – game dev, AI & creative tech.",
+    "Portfolio of Prince Malonga (Phant9m) – game dev, cybersecurity & AI projects.",
+  icons: {
+    icon: "/phant9m-logo.svg",
+  },
 };
 
 export default function RootLayout({

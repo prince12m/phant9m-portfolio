@@ -7,6 +7,8 @@ export const metadata: Metadata = {
     "Portfolio of Prince Malonga (Phant9m) – game dev, cybersecurity & AI projects.",
   icons: {
     icon: "/phant9m-logo.svg",
+    shortcut: "/phant9m-logo.svg",
+    apple: "/phant9m-logo.svg",
   },
 };
 

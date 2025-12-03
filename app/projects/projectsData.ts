@@ -1,75 +1,57 @@
 // app/projects/projectsData.ts
 
 export type Project = {
-  slug: string;
-  title: string;
-  tag: string;
-  summary: string;
+  slug: string; // URL part, e.g. "cardinal-prototype-one"
+  title: string; // Display title
+  tag: string; // Small label above the card
+  summary: string; // Short text for the homepage card
+  description: string; // Longer text for the case-study page
+  status: "in-progress" | "released" | "prototype";
   tech: string[];
-  role: string;
-  status: "proto" | "in-progress" | "released";
-  links?: { label: string; href: string }[];
-  highlights: string[];
 };
 
 export const projects: Project[] = [
   {
     slug: "cardinal-prototype-one",
     title: "Cardinal Prototype One",
-    tag: "Roblox · Combat & Character Creation",
+    tag: "Roblox | Combat & Character Creation",
     summary:
-      "Deepwoken-inspired Roblox prototype focusing on movement, lock-on combat and a race & attribute-driven character creator.",
-    tech: ["Roblox Studio", "Luau", "State Machines", "RemoteEvents"],
-    role: "Solo developer – design, scripting, systems.",
+      "Deepwoken-inspired prototype featuring custom movement, lock-on combat, and an advanced race & attribute-based character creator.",
+    description:
+      "Cardinal Prototype One is a Roblox project inspired by Deepwoken. It focuses on custom locomotion, a lock-on combat system, and a detailed character creator driven by races, attributes and future boons/flaws.",
     status: "in-progress",
-    links: [
-      // fill these when you have them
-      // { label: "Gameplay video", href: "https://..." },
-    ],
-    highlights: [
-      "Custom movement system with sprinting, dashing, strafing and lock-on camera.",
-      "Race, attribute and weapon-class based character creation pipeline.",
-      "Architecture designed for PvP-first combat and future skill trees.",
-    ],
+    tech: ["Roblox Studio", "Luau", "Custom movement", "Lock-on combat"],
   },
   {
     slug: "project-hsssz",
     title: "Project HSSSZ",
-    tag: "Unity · FMP · Cyborg Zombie Shooter",
+    tag: "Unity | FMP | Cyborg Zombie Shooter",
     summary:
-      "Third-person shooter with procedural mazes, cover placement and a Nemesis-style cyborg zombie AI.",
-    tech: ["Unity", "C#", "Invector", "Procedural Generation"],
-    role: "Solo developer – systems, AI behaviour, level logic.",
-    status: "in-progress",
-    links: [
-      // { label: "Devlog", href: "https://..." },
-    ],
-    highlights: [
-      "Procedural maze generation tied to enemy behaviour and cover placement.",
-      "Dynamic cover objects that orient correctly to walls and paths.",
-      "Foundation for a Nemesis system that remembers player choices.",
-    ],
+      "Procedural maze shooter with Nemesis-style AI, dynamic cover placement, and sci-fi cyborg zombies.",
+    description:
+      "Project HSSSZ is a Unity-based cyborg-zombie shooter built for your FMP. It uses a procedural maze generator, cover placement system, and a Nemesis-style AI that learns from player behaviour.",
+    status: "prototype",
+    tech: ["Unity", "C#", "Procedural generation", "AI / Nemesis system"],
   },
   {
     slug: "ue5-movement-system",
-    title: "UE5 Advanced Movement System",
-    tag: "Unreal Engine 5 · C++",
+    title: "Shadows / UE5 Movement System",
+    tag: "Unreal Engine 5 | C++",
     summary:
-      "Custom third-person character controller for an original project, with responsive sliding and future wall-movement.",
-    tech: ["Unreal Engine 5", "C++", "Enhanced Input"],
-    role: "Solo developer – C++ implementation & design.",
-    status: "proto",
-    links: [
-      // { label: "Prototype clip", href: "https://..." },
-    ],
-    highlights: [
-      "Slide mechanic integrated with UE5 Enhanced Input.",
-      "Architecture planned for wall-climb, wall-jump and stamina systems.",
-      "Serves as foundation for future narrative-driven game concepts.",
-    ],
+      "Custom third-person controller with sliding, wall-climbing and parkour-inspired movement.",
+    description:
+      "This Unreal Engine 5 project is your playground for advanced character movement: sliding, wall-climbing, parkour-style traversal and more, built in a mix of C++ and Blueprints.",
+    status: "in-progress",
+    tech: ["Unreal Engine 5", "C++", "Character movement"],
   },
 ];
 
-export function getProject(slug: string) {
-  return projects.find((p) => p.slug === slug);
+// Look up a single project by slug
+export function getProject(slug: string): Project | undefined {
+  return projects.find((project) => project.slug === slug);
+}
+
+// Used later if we want to pre-generate static pages
+export function getAllProjectSlugs(): string[] {
+  return projects.map((project) => project.slug);
 }

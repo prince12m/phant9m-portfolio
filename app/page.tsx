@@ -1,3 +1,5 @@
+// app/page.tsx
+
 import Link from "next/link";
 import { Github, Linkedin, Mail } from "lucide-react";
 import { projects } from "./projects/projectsData";
@@ -55,8 +57,8 @@ export default function Home() {
                 Focus Areas
               </p>
               <ul className="text-sm space-y-1.5 text-slate-200">
-                <li>• Advanced movement & combat systems</li>
-                <li>• Procedural levels & AI behaviour</li>
+                <li>• Advanced movement &amp; combat systems</li>
+                <li>• Procedural levels &amp; AI behaviour</li>
                 <li>• Portfolio-ready, polished prototypes</li>
               </ul>
             </div>

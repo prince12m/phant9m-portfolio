@@ -1,10 +1,12 @@
+// app/layout.tsx
+
 import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Phant9m | Portfolio",
   description:
-    "Portfolio of Prince Malonga (Phant9m) – game dev, cybersecurity & AI projects.",
+    "Portfolio of Prince Malonga (Phant9m) – game development, cybersecurity and AI projects.",
   icons: {
     icon: "/phant9m-logo.svg",
     shortcut: "/phant9m-logo.svg",

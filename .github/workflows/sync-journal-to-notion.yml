@@ -40,7 +40,7 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ENTRY_FILE="${{ github.event.inputs.entry_file }}"
           else
-            ENTRY_FILE="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
+            ENTRY_FILE="$(find project-journal/entries -type f -name '*.md' | sort | tail -n 1)"
           fi
 
           if [ -z "$ENTRY_FILE" ]; then

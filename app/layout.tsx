@@ -1,12 +1,10 @@
-// app/layout.tsx
-
 import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Phant9m | Portfolio",
   description:
-    "Portfolio of Prince Malonga (Phant9m) – game development, cybersecurity and AI projects.",
+    "Portfolio of Prince Malonga (Phant9m) covering game development, cybersecurity, and AI-adjacent projects.",
   icons: {
     icon: "/phant9m-logo.svg",
     shortcut: "/phant9m-logo.svg",
@@ -21,7 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-slate-950 text-slate-100 min-h-screen">
+      <body className="min-h-screen bg-slate-950 text-slate-100 antialiased">
         {children}
       </body>
     </html>

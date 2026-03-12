@@ -1,0 +1,60 @@
+name: Sync Journal Entry to Notion
+
+on:
+  workflow_dispatch:
+    inputs:
+      entry_file:
+        description: "Path to the journal entry file under project-journal/entries"
+        required: true
+        type: string
+
+  push:
+    branches:
+      - main
+    paths:
+      - "project-journal/entries/**/*.md"
+
+jobs:
+  sync-notion:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Resolve journal entry file
+        id: resolve-entry
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            ENTRY_FILE="${{ github.event.inputs.entry_file }}"
+          else
+            ENTRY_FILE="$(git diff --name-only "${{ github.event.before }}" "${{ github.sha }}" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
+          fi
+
+          if [ -z "$ENTRY_FILE" ]; then
+            echo "No journal entry file found."
+            exit 1
+          fi
+
+          echo "entry_file=$ENTRY_FILE" >> "$GITHUB_OUTPUT"
+          echo "Resolved entry file: $ENTRY_FILE"
+
+      - name: Send journal entry to Notion
+        run: node scripts/sync-journal-to-notion.mjs "${{ steps.resolve-entry.outputs.entry_file }}"
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+          NOTION_BUILD_DEV_JOURNAL_ID: ${{ secrets.NOTION_BUILD_DEV_JOURNAL_ID }}
+          GITHUB_SHA: ${{ github.sha }}
+          GITHUB_REPOSITORY: ${{ github.repository }}

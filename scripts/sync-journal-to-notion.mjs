@@ -40,6 +40,10 @@ function normalizeStatus(value) {
     return "In progress";
   if (["not-started", "not started", "todo", "to-do"].includes(lower))
     return "Not started";
+  if (["planning"].includes(lower)) return "Planning";
+  if (["on-hold", "on hold", "hold"].includes(lower)) return "On Hold";
+  if (["review"].includes(lower)) return "Review";
+  if (["cancelled", "canceled"].includes(lower)) return "Cancelled";
 
   return titleCase(value);
 }
@@ -186,10 +190,23 @@ function buildCommitUrl(frontmatter) {
   return undefined;
 }
 
-async function findProjectPageIdBySlug(projectSlug) {
+async function notionFetch(url, options) {
+  const response = await fetch(url, options);
+  const payload = await response.json();
+
+  if (!response.ok) {
+    console.error("Notion API request failed.");
+    console.error(JSON.stringify(payload, null, 2));
+    process.exit(1);
+  }
+
+  return payload;
+}
+
+async function findProjectPageBySlug(projectSlug) {
   if (!projectSlug) return undefined;
 
-  const response = await fetch(
+  const payload = await notionFetch(
     `https://api.notion.com/v1/data_sources/${process.env.NOTION_PROJECT_MASTER_ID}/query`,
     {
       method: "POST",
@@ -210,14 +227,6 @@ async function findProjectPageIdBySlug(projectSlug) {
     },
   );
 
-  const payload = await response.json();
-
-  if (!response.ok) {
-    console.error("Failed to query Project Master in Notion.");
-    console.error(JSON.stringify(payload, null, 2));
-    process.exit(1);
-  }
-
   if (!payload.results || payload.results.length === 0) {
     console.error(
       `No project found in Project Master with slug: ${projectSlug}`,
@@ -225,7 +234,36 @@ async function findProjectPageIdBySlug(projectSlug) {
     process.exit(1);
   }
 
-  return payload.results[0].id;
+  return payload.results[0];
+}
+
+async function updateProjectMaster(projectPageId, frontmatter) {
+  const properties = {
+    "Has Journal": {
+      checkbox: true,
+    },
+  };
+
+  const normalizedStatus = normalizeStatus(frontmatter.status);
+  if (normalizedStatus) {
+    properties["Status"] = {
+      status: {
+        name: normalizedStatus,
+      },
+    };
+  }
+
+  await notionFetch(`https://api.notion.com/v1/pages/${projectPageId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
+      "Content-Type": "application/json",
+      "Notion-Version": "2026-03-11",
+    },
+    body: JSON.stringify({
+      properties,
+    }),
+  });
 }
 
 function buildChildren(frontmatter, bodyMarkdown) {
@@ -281,7 +319,8 @@ async function main() {
 
   const title = buildTitle(frontmatter);
   const commitUrl = buildCommitUrl(frontmatter);
-  const projectPageId = await findProjectPageIdBySlug(frontmatter.project_slug);
+  const projectPage = await findProjectPageBySlug(frontmatter.project_slug);
+  const projectPageId = projectPage.id;
 
   const properties = {
     Title: {
@@ -293,13 +332,11 @@ async function main() {
       },
     },
     Project: {
-      relation: projectPageId
-        ? [
-            {
-              id: projectPageId,
-            },
-          ]
-        : [],
+      relation: [
+        {
+          id: projectPageId,
+        },
+      ],
     },
     "Tool Used": {
       select: {
@@ -416,7 +453,7 @@ async function main() {
 
   const children = buildChildren(frontmatter, content);
 
-  const response = await fetch("https://api.notion.com/v1/pages", {
+  const payload = await notionFetch("https://api.notion.com/v1/pages", {
     method: "POST",
     headers: {
       Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
@@ -433,17 +470,12 @@ async function main() {
     }),
   });
 
-  const payload = await response.json();
-
-  if (!response.ok) {
-    console.error("Notion API request failed.");
-    console.error(JSON.stringify(payload, null, 2));
-    process.exit(1);
-  }
+  await updateProjectMaster(projectPageId, frontmatter);
 
   console.log("Notion page created successfully.");
   console.log(`Page ID: ${payload.id}`);
   console.log(`Source file: ${entryFile}`);
+  console.log(`Project Master updated: ${projectPageId}`);
 }
 
 main().catch((error) => {

@@ -23,7 +23,7 @@ assistant_output_summary:
 
 # Summary
 
-Write a short summary of what changed.
+Write a short summary of what changed in 2–5 sentences.
 
 # Detailed Notes
 
@@ -35,7 +35,18 @@ Paste any important code here.
 
 # Errors Encountered
 
-List errors, warnings, or blockers here.
+List exact errors, warnings, blockers, or confusing behaviour here.
+Keep them word-for-word if possible.
+
+# Testing / Verification
+
+Write how you tested the change.
+Examples:
+
+- Local dev run succeeded
+- `npm run build` passed
+- Cloudflare deployment succeeded
+- Journal sync workflow passed
 
 # Next Step
 

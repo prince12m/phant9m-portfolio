@@ -68,5 +68,6 @@ jobs:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
           NOTION_BUILD_DEV_JOURNAL_ID: ${{ secrets.NOTION_BUILD_DEV_JOURNAL_ID }}
           NOTION_PROJECT_MASTER_ID: ${{ secrets.NOTION_PROJECT_MASTER_ID }}
+          NOTION_SESSION_LOG_ID: ${{ secrets.NOTION_SESSION_LOG_ID }}
           GITHUB_SHA: ${{ github.sha }}
           GITHUB_REPOSITORY: ${{ github.repository }}

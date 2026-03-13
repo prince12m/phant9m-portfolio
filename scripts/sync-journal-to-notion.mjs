@@ -6,6 +6,7 @@ const REQUIRED_ENV_VARS = [
   "NOTION_TOKEN",
   "NOTION_BUILD_DEV_JOURNAL_ID",
   "NOTION_PROJECT_MASTER_ID",
+  "NOTION_SESSION_LOG_ID",
 ];
 
 for (const key of REQUIRED_ENV_VARS) {
@@ -177,6 +178,12 @@ function buildTitle(frontmatter) {
   return `${project} — ${step}`;
 }
 
+function buildSessionName(frontmatter) {
+  const phase = frontmatter.phase ? `${frontmatter.phase} — ` : "";
+  const step = frontmatter.step || frontmatter.type || "Session";
+  return `${phase}${step}`;
+}
+
 function buildCommitUrl(frontmatter) {
   if (frontmatter.commit_url) return frontmatter.commit_url;
 
@@ -188,6 +195,101 @@ function buildCommitUrl(frontmatter) {
   }
 
   return undefined;
+}
+
+function textFromArray(value) {
+  if (!Array.isArray(value) || value.length === 0) return "";
+  return value.map((item) => String(item)).join(", ");
+}
+
+function buildWhatChanged(frontmatter) {
+  const parts = [];
+
+  if (frontmatter.assistant_output_summary) {
+    parts.push(String(frontmatter.assistant_output_summary));
+  }
+
+  if (
+    Array.isArray(frontmatter.files_changed) &&
+    frontmatter.files_changed.length > 0
+  ) {
+    parts.push(`Files changed: ${frontmatter.files_changed.join(", ")}`);
+  }
+
+  if (frontmatter.fix) {
+    parts.push(`Fix applied: ${frontmatter.fix}`);
+  }
+
+  return parts.join(" ");
+}
+
+function buildIssuesEncountered(frontmatter, bodyMarkdown) {
+  const parts = [];
+
+  if (frontmatter.problem) {
+    parts.push(String(frontmatter.problem));
+  }
+
+  const body = String(bodyMarkdown);
+  const errorsSectionMatch = body.match(
+    /# Errors Encountered\s+([\s\S]*?)(?=\n# |\n## |\Z)/i,
+  );
+
+  if (errorsSectionMatch && errorsSectionMatch[1]) {
+    const cleaned = errorsSectionMatch[1].trim();
+    if (cleaned) {
+      parts.push(cleaned);
+    }
+  }
+
+  return parts.join("\n\n");
+}
+
+function buildChildren(frontmatter, bodyMarkdown) {
+  const blocks = [];
+
+  blocks.push(headingBlock("Metadata"));
+
+  const metadataLines = [
+    frontmatter.project ? `Project: ${frontmatter.project}` : null,
+    frontmatter.project_slug
+      ? `Project slug: ${frontmatter.project_slug}`
+      : null,
+    frontmatter.phase ? `Phase: ${frontmatter.phase}` : null,
+    frontmatter.step ? `Step: ${frontmatter.step}` : null,
+    frontmatter.type ? `Type: ${frontmatter.type}` : null,
+    frontmatter.status ? `Status: ${frontmatter.status}` : null,
+    frontmatter.tool ? `Original tools: ${frontmatter.tool}` : null,
+    frontmatter.time_spent_hours
+      ? `Time spent (hours): ${frontmatter.time_spent_hours}`
+      : null,
+    Array.isArray(frontmatter.files_changed) && frontmatter.files_changed.length
+      ? `Files changed: ${frontmatter.files_changed.join(", ")}`
+      : null,
+    frontmatter.problem ? `Problem: ${frontmatter.problem}` : null,
+    frontmatter.fix ? `Fix: ${frontmatter.fix}` : null,
+    frontmatter.prompt_instruction
+      ? `Prompt / Instruction: ${frontmatter.prompt_instruction}`
+      : null,
+    frontmatter.assistant_output_summary
+      ? `Assistant output summary: ${frontmatter.assistant_output_summary}`
+      : null,
+    frontmatter.resolution ? `Resolution: ${frontmatter.resolution}` : null,
+    frontmatter.cloudflare_url
+      ? `Cloudflare URL: ${frontmatter.cloudflare_url}`
+      : null,
+  ].filter(Boolean);
+
+  for (const line of metadataLines) {
+    blocks.push(bulletBlock(line));
+  }
+
+  if (bodyMarkdown.trim()) {
+    blocks.push(headingBlock("Journal Content"));
+    blocks.push(...markdownToBlocks(bodyMarkdown));
+  }
+
+  return blocks.slice(0, 100);
 }
 
 async function notionFetch(url, options) {
@@ -266,51 +368,70 @@ async function updateProjectMaster(projectPageId, frontmatter) {
   });
 }
 
-function buildChildren(frontmatter, bodyMarkdown) {
-  const blocks = [];
+async function createSessionLogEntry(projectPageId, frontmatter, bodyMarkdown) {
+  const sessionName = buildSessionName(frontmatter);
+  const whatChanged = buildWhatChanged(frontmatter);
+  const issuesEncountered = buildIssuesEncountered(frontmatter, bodyMarkdown);
+  const resolved = Boolean(frontmatter.resolution || frontmatter.fix);
+  const goal =
+    frontmatter.prompt_instruction ||
+    frontmatter.step ||
+    frontmatter.type ||
+    "Work session update";
 
-  blocks.push(headingBlock("Metadata"));
+  const properties = {
+    "Session Name": {
+      title: toRichText(sessionName),
+    },
+    Date: {
+      date: {
+        start: frontmatter.date || new Date().toISOString().slice(0, 10),
+      },
+    },
+    Project: {
+      relation: [
+        {
+          id: projectPageId,
+        },
+      ],
+    },
+    Goal: {
+      rich_text: toRichText(goal),
+    },
+    "What Changed": {
+      rich_text: toRichText(
+        whatChanged || "See linked Build & Dev Journal entry.",
+      ),
+    },
+    "Issues Encountered": {
+      rich_text: toRichText(issuesEncountered || "No issues logged."),
+    },
+    Resolved: {
+      checkbox: resolved,
+    },
+    "Next Step": {
+      rich_text: toRichText(
+        frontmatter.next_step ||
+          "Continue with the next planned implementation step.",
+      ),
+    },
+  };
 
-  const metadataLines = [
-    frontmatter.project ? `Project: ${frontmatter.project}` : null,
-    frontmatter.project_slug
-      ? `Project slug: ${frontmatter.project_slug}`
-      : null,
-    frontmatter.phase ? `Phase: ${frontmatter.phase}` : null,
-    frontmatter.step ? `Step: ${frontmatter.step}` : null,
-    frontmatter.type ? `Type: ${frontmatter.type}` : null,
-    frontmatter.status ? `Status: ${frontmatter.status}` : null,
-    frontmatter.tool ? `Original tools: ${frontmatter.tool}` : null,
-    frontmatter.time_spent_hours
-      ? `Time spent (hours): ${frontmatter.time_spent_hours}`
-      : null,
-    Array.isArray(frontmatter.files_changed) && frontmatter.files_changed.length
-      ? `Files changed: ${frontmatter.files_changed.join(", ")}`
-      : null,
-    frontmatter.problem ? `Problem: ${frontmatter.problem}` : null,
-    frontmatter.fix ? `Fix: ${frontmatter.fix}` : null,
-    frontmatter.prompt_instruction
-      ? `Prompt / Instruction: ${frontmatter.prompt_instruction}`
-      : null,
-    frontmatter.assistant_output_summary
-      ? `Assistant output summary: ${frontmatter.assistant_output_summary}`
-      : null,
-    frontmatter.resolution ? `Resolution: ${frontmatter.resolution}` : null,
-    frontmatter.cloudflare_url
-      ? `Cloudflare URL: ${frontmatter.cloudflare_url}`
-      : null,
-  ].filter(Boolean);
-
-  for (const line of metadataLines) {
-    blocks.push(bulletBlock(line));
-  }
-
-  if (bodyMarkdown.trim()) {
-    blocks.push(headingBlock("Journal Content"));
-    blocks.push(...markdownToBlocks(bodyMarkdown));
-  }
-
-  return blocks.slice(0, 100);
+  await notionFetch("https://api.notion.com/v1/pages", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
+      "Content-Type": "application/json",
+      "Notion-Version": "2026-03-11",
+    },
+    body: JSON.stringify({
+      parent: {
+        type: "data_source_id",
+        data_source_id: process.env.NOTION_SESSION_LOG_ID,
+      },
+      properties,
+    }),
+  });
 }
 
 async function main() {
@@ -471,11 +592,13 @@ async function main() {
   });
 
   await updateProjectMaster(projectPageId, frontmatter);
+  await createSessionLogEntry(projectPageId, frontmatter, content);
 
   console.log("Notion page created successfully.");
   console.log(`Page ID: ${payload.id}`);
   console.log(`Source file: ${entryFile}`);
   console.log(`Project Master updated: ${projectPageId}`);
+  console.log(`Session Log entry created for project: ${projectPageId}`);
 }
 
 main().catch((error) => {

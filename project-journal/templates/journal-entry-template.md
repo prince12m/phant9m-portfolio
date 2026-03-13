@@ -19,6 +19,7 @@ fix:
 prompt_instruction:
 resolution:
 assistant_output_summary:
+next_step:
 ---
 
 # Summary

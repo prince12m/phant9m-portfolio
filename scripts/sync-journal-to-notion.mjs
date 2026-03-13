@@ -2,7 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import matter from "gray-matter";
 
-const REQUIRED_ENV_VARS = ["NOTION_TOKEN", "NOTION_BUILD_DEV_JOURNAL_ID"];
+const REQUIRED_ENV_VARS = [
+  "NOTION_TOKEN",
+  "NOTION_BUILD_DEV_JOURNAL_ID",
+  "NOTION_PROJECT_MASTER_ID",
+];
 
 for (const key of REQUIRED_ENV_VARS) {
   if (!process.env[key]) {
@@ -169,17 +173,46 @@ function buildTitle(frontmatter) {
   return `${project} — ${step}`;
 }
 
-function buildCommitUrl(frontmatter) {
-  if (frontmatter.commit_url) return frontmatter.commit_url;
+async function findProjectPageIdBySlug(projectSlug) {
+  if (!projectSlug) return undefined;
 
-  const repo = process.env.GITHUB_REPOSITORY;
-  const sha = process.env.GITHUB_SHA;
+  const response = await fetch(
+    `https://api.notion.com/v1/data_sources/${process.env.NOTION_PROJECT_MASTER_ID}/query`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${process.env.NOTION_TOKEN}`,
+        "Content-Type": "application/json",
+        "Notion-Version": "2026-03-11",
+      },
+      body: JSON.stringify({
+        filter: {
+          property: "Slug",
+          rich_text: {
+            equals: String(projectSlug),
+          },
+        },
+        page_size: 10,
+      }),
+    },
+  );
 
-  if (repo && sha) {
-    return `https://github.com/${repo}/commit/${sha}`;
+  const payload = await response.json();
+
+  if (!response.ok) {
+    console.error("Failed to query Project Master in Notion.");
+    console.error(JSON.stringify(payload, null, 2));
+    process.exit(1);
   }
 
-  return undefined;
+  if (!payload.results || payload.results.length === 0) {
+    console.error(
+      `No project found in Project Master with slug: ${projectSlug}`,
+    );
+    process.exit(1);
+  }
+
+  return payload.results[0].id;
 }
 
 function buildChildren(frontmatter, bodyMarkdown) {
@@ -230,11 +263,11 @@ function buildChildren(frontmatter, bodyMarkdown) {
 }
 
 async function main() {
-  const fileContents = await fs.readFile(entryPath, "utf8");
   const { data: frontmatter, content } = matter(fileContents);
 
   const title = buildTitle(frontmatter);
   const commitUrl = buildCommitUrl(frontmatter);
+  const projectPageId = await findProjectPageIdBySlug(frontmatter.project_slug);
 
   const properties = {
     Title: {
@@ -244,6 +277,13 @@ async function main() {
       date: {
         start: frontmatter.date || new Date().toISOString().slice(0, 10),
       },
+    },
+    Project: {
+      relation: [
+        {
+          id: projectPageId,
+        },
+      ],
     },
     "Tool Used": {
       select: {

@@ -48,8 +48,8 @@ function normalizeBuildResult(value) {
   if (!value) return undefined;
   const lower = String(value).trim().toLowerCase();
 
-  if (lower === "passed" || lower === "pass") return "Passed";
-  if (lower === "failed" || lower === "fail") return "Failed";
+  if (["passed", "pass"].includes(lower)) return "Passed";
+  if (["failed", "fail"].includes(lower)) return "Failed";
 
   return titleCase(value);
 }
@@ -64,7 +64,7 @@ function toRichText(content) {
     {
       type: "text",
       text: {
-        content,
+        content: String(content),
       },
     },
   ];
@@ -73,7 +73,7 @@ function toRichText(content) {
 function splitLongText(text, maxLength = 1800) {
   if (!text) return [];
   const chunks = [];
-  let remaining = text.trim();
+  let remaining = String(text).trim();
 
   while (remaining.length > maxLength) {
     let splitIndex = remaining.lastIndexOf(" ", maxLength);
@@ -120,7 +120,7 @@ function bulletBlock(text) {
 }
 
 function markdownToBlocks(markdown) {
-  const lines = markdown.split(/\r?\n/);
+  const lines = String(markdown).split(/\r?\n/);
   const blocks = [];
   let paragraphBuffer = [];
 
@@ -171,6 +171,19 @@ function buildTitle(frontmatter) {
   const project = frontmatter.project || "Project";
   const step = frontmatter.step || frontmatter.type || "Journal Update";
   return `${project} — ${step}`;
+}
+
+function buildCommitUrl(frontmatter) {
+  if (frontmatter.commit_url) return frontmatter.commit_url;
+
+  const repo = process.env.GITHUB_REPOSITORY;
+  const sha = process.env.GITHUB_SHA;
+
+  if (repo && sha) {
+    return `https://github.com/${repo}/commit/${sha}`;
+  }
+
+  return undefined;
 }
 
 async function findProjectPageIdBySlug(projectSlug) {
@@ -263,7 +276,8 @@ function buildChildren(frontmatter, bodyMarkdown) {
 }
 
 async function main() {
-  const { data: frontmatter, content } = matter(fileContents);
+  const fileContent = await fs.readFile(entryPath, "utf8");
+  const { data: frontmatter, content } = matter(fileContent);
 
   const title = buildTitle(frontmatter);
   const commitUrl = buildCommitUrl(frontmatter);
@@ -279,11 +293,13 @@ async function main() {
       },
     },
     Project: {
-      relation: [
-        {
-          id: projectPageId,
-        },
-      ],
+      relation: projectPageId
+        ? [
+            {
+              id: projectPageId,
+            },
+          ]
+        : [],
     },
     "Tool Used": {
       select: {

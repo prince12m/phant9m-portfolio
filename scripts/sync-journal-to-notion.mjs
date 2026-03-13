@@ -205,6 +205,12 @@ function buildChildren(frontmatter, bodyMarkdown) {
       : null,
     frontmatter.problem ? `Problem: ${frontmatter.problem}` : null,
     frontmatter.fix ? `Fix: ${frontmatter.fix}` : null,
+    frontmatter.prompt_instruction
+      ? `Prompt / Instruction: ${frontmatter.prompt_instruction}`
+      : null,
+    frontmatter.assistant_output_summary
+      ? `Assistant output summary: ${frontmatter.assistant_output_summary}`
+      : null,
     frontmatter.resolution ? `Resolution: ${frontmatter.resolution}` : null,
     frontmatter.cloudflare_url
       ? `Cloudflare URL: ${frontmatter.cloudflare_url}`
@@ -246,6 +252,50 @@ async function main() {
     },
   };
 
+  if (frontmatter.phase) {
+    properties["Phase"] = {
+      select: {
+        name: String(frontmatter.phase),
+      },
+    };
+  }
+
+  if (frontmatter.step) {
+    properties["Step"] = {
+      rich_text: toRichText(String(frontmatter.step)),
+    };
+  }
+
+  if (frontmatter.assistant_output_summary) {
+    properties["Assistant Output Summary"] = {
+      rich_text: toRichText(String(frontmatter.assistant_output_summary)),
+    };
+  }
+
+  if (frontmatter.problem) {
+    properties["Problem"] = {
+      rich_text: toRichText(String(frontmatter.problem)),
+    };
+  }
+
+  if (frontmatter.fix) {
+    properties["Fix"] = {
+      rich_text: toRichText(String(frontmatter.fix)),
+    };
+  }
+
+  if (frontmatter.prompt_instruction) {
+    properties["Prompt / Instruction"] = {
+      rich_text: toRichText(String(frontmatter.prompt_instruction)),
+    };
+  }
+
+  if (frontmatter.resolution) {
+    properties["Resolution"] = {
+      rich_text: toRichText(String(frontmatter.resolution)),
+    };
+  }
+
   const normalizedType = normalizeType(frontmatter.type);
   if (normalizedType) {
     properties["Type"] = {
@@ -272,6 +322,15 @@ async function main() {
       multi_select: frontmatter.tags.map((tag) => ({
         name: String(tag),
       })),
+    };
+  }
+
+  if (
+    Array.isArray(frontmatter.files_changed) &&
+    frontmatter.files_changed.length > 0
+  ) {
+    properties["Files Changed"] = {
+      rich_text: toRichText(frontmatter.files_changed.join(", ")),
     };
   }
 

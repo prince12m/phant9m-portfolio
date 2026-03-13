@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
@@ -40,7 +42,14 @@ jobs:
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             ENTRY_FILE="${{ github.event.inputs.entry_file }}"
           else
-            ENTRY_FILE="$(find project-journal/entries -type f -name '*.md' | sort | tail -n 1)"
+            BEFORE="${{ github.event.before }}"
+            AFTER="${{ github.sha }}"
+
+            if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+              ENTRY_FILE="$(git diff --name-only "$BEFORE" "$AFTER" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
+            else
+              ENTRY_FILE="$(git show --name-only --pretty="" "$AFTER" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
+            fi
           fi
 
           if [ -z "$ENTRY_FILE" ]; then

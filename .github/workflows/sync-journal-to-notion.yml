@@ -45,15 +45,17 @@ jobs:
             BEFORE="${{ github.event.before }}"
             AFTER="${{ github.sha }}"
 
-            if git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            if git rev-parse --verify --quiet "$BEFORE^{commit}" >/dev/null; then
+              echo "Previous commit found, diffing $BEFORE to $AFTER..."
               ENTRY_FILE="$(git diff --name-only "$BEFORE" "$AFTER" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
             else
-              ENTRY_FILE="$(git show --name-only --pretty="" "$AFTER" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
+              echo "Previous commit missing or invalid. Checking latest commit only..."
+              ENTRY_FILE="$(git show --name-only --pretty='' "$AFTER" | grep '^project-journal/entries/.*\.md$' | tail -n 1)"
             fi
           fi
 
           if [ -z "$ENTRY_FILE" ]; then
-            echo "No journal entry file found."
+            echo "No journal entry file found in the commit changes."
             exit 1
           fi
 
